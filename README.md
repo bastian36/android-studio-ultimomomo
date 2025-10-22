@@ -5,7 +5,8 @@ Aplicación móvil nativa para Android desarrollada en **Kotlin** con **Jetpack 
 
 ## 👥 Equipo de Desarrollo
 - **Bastián Guajardo** - ba.guajardoh@duocuc.cl
-- **[Nombre del compañero]** - [email del compañero]
+- **Maximiliano Sanchez - max.sanchezs@duocuc.cl
+- **Bastian Concha - ba.conchar@duocuc.cl
 
 ## ✨ Funcionalidades Implementadas
 
