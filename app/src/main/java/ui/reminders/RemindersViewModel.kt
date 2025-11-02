@@ -22,7 +22,7 @@ class RemindersViewModel(application: Application) : AndroidViewModel(applicatio
             }
         }
     }
-    //dejaste la caga aweonao
+
     
     fun addReminder(title: String, description: String, date: String, time: String) {
         viewModelScope.launch {

@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -99,10 +100,9 @@ fun PrincipalScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Spacer(modifier = Modifier.height(20.dp))
-                
                 // Tarjeta de bienvenida
                 Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -134,7 +134,9 @@ fun PrincipalScreen(
                     Text(
                         text = userName,
                         style = MaterialTheme.typography.headlineMedium,
-                        color = Color.Black.copy(alpha = 0.8f)
+                        color = Color.Black.copy(alpha = 0.8f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
                     
                     Text(
@@ -173,7 +175,7 @@ fun PrincipalScreen(
                 onClick = onNavigateToReminders
             )
             
-                Spacer(modifier = Modifier.weight(1f))
+
             }
         }
     }
@@ -218,5 +220,6 @@ fun GameButton(
                 fontWeight = FontWeight.Bold
             )
         }
+
     }
 }
