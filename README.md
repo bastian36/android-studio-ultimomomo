@@ -5,7 +5,8 @@ Aplicación móvil nativa para Android desarrollada en **Kotlin** con **Jetpack 
 
 ## 👥 Equipo de Desarrollo
 - **Bastián Guajardo** - ba.guajardoh@duocuc.cl
-- **[Nombre del compañero]** - [email del compañero]
+- **Maximiliano Sanchez - max.sanchezs@duocuc.cl
+- **Bastian Concha - ba.conchar@duocuc.cl
 
 ## ✨ Funcionalidades Implementadas
 
@@ -109,9 +110,10 @@ Aplicación móvil nativa para Android desarrollada en **Kotlin** con **Jetpack 
 
 ### Credenciales de Prueba
 - **Email:** ba.guajardoh@duocuc.cl
+- **Email:** ba.conchar@duocuc.cl
 - **Contraseña:** [crear usuario desde la app o Firebase Console]
 
-## 📁 Estructura del Proyecto
+## 📁 Estructura y Ordeb del Proyecto
 ```
 app/
 ├── src/main/java/
@@ -185,7 +187,9 @@ implementation("io.coil-kt:coil-compose")
 ## 📞 Contacto
 Para consultas sobre el proyecto:
 - **Email:** ba.guajardoh@duocuc.cl
+- **Email:** ba.conchar@duocuc.cl
+- **Email:** max.sanchezs@duocuc.cl
 - **Institución:** DUOC UC
 
 ---
-**Desarrollado con ❤️ para la asignatura de Desarrollo Móvil**
+**Desarrollado para la asignatura de Desarrollo Móvil**

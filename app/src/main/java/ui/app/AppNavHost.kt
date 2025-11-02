@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 import ui.home.HomeScreen
 import ui.login.LoginScreen
 import ui.register.RegistrarseScreen
@@ -55,9 +56,10 @@ fun AppNavHost(
         }
         
         composable(Route.PRINCIPAL) {
+            val currentUser = FirebaseAuth.getInstance().currentUser
             PrincipalScreen(
-                userName = "Bastian Guajardo",
-                userEmail = "ba.guajardoh@duocuc.cl",
+                userName = currentUser?.displayName ?: currentUser?.email?.substringBefore("@") ?: "Usuario",
+                userEmail = currentUser?.email ?: "",
                 onLogout = {
                     navController.navigate(Route.HOME) {
                         popUpTo(0) { inclusive = true }
