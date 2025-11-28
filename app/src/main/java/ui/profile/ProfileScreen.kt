@@ -2,6 +2,7 @@ package ui.profile
 
 import android.Manifest
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -26,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -36,10 +38,11 @@ import utils.rememberLocationState
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ProfileScreen(
-    userName: String = "Usuario",
-    userEmail: String = "",
+    userName: String,
+    userEmail: String,
     onLogout: () -> Unit = {},
-    onNavigateToProducts: () -> Unit = {}
+    onNavigateToProducts: () -> Unit = {},
+    viewModel: ProfileViewModel = viewModel()
 ) {
     var profileImageUri by remember { mutableStateOf<Uri?>(null) }
     var currentLocation by remember { mutableStateOf<String?>(null) }
@@ -48,12 +51,10 @@ fun ProfileScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val locationState = rememberLocationState()
-    val auth = FirebaseAuth.getInstance()
-    val currentUser = auth.currentUser
+    val uploadState by viewModel.uploadState.collectAsState()
     
-    // Obtener datos del usuario logueado
-    val displayName = currentUser?.displayName ?: "Usuario"
-    val email = currentUser?.email ?: "No disponible"
+    val displayName = userName
+    val email = userEmail
     
     // Permisos
     val permissionsState = rememberMultiplePermissionsState(
@@ -72,8 +73,9 @@ fun ProfileScreen(
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        if (success) {
+        if (success && photoUri != null) {
             profileImageUri = photoUri
+            photoUri?.let { viewModel.uploadImage(context, it) }
         }
     }
     
@@ -81,7 +83,25 @@ fun ProfileScreen(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        profileImageUri = uri
+        uri?.let {
+            profileImageUri = it
+            viewModel.uploadImage(context, it)
+        }
+    }
+    
+    // Observar estado de subida
+    LaunchedEffect(uploadState) {
+        when (uploadState) {
+            is UploadState.Success -> {
+                Toast.makeText(context, (uploadState as UploadState.Success).message, Toast.LENGTH_SHORT).show()
+                viewModel.resetState()
+            }
+            is UploadState.Error -> {
+                Toast.makeText(context, (uploadState as UploadState.Error).message, Toast.LENGTH_LONG).show()
+                viewModel.resetState()
+            }
+            else -> {}
+        }
     }
     
     Box(
@@ -159,11 +179,16 @@ fun ProfileScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFF6B9D)
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = uploadState !is UploadState.Loading
                 ) {
-                    Icon(Icons.Default.PhotoLibrary, contentDescription = null, tint = Color.White)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Galería", color = Color.White, fontWeight = FontWeight.Bold)
+                    if (uploadState is UploadState.Loading) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
+                    } else {
+                        Icon(Icons.Default.PhotoLibrary, contentDescription = null, tint = Color.White)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Galería", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
 

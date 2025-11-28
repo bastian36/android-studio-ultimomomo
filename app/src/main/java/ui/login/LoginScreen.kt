@@ -22,7 +22,7 @@ import ui.components.ValidatedTextField
 
 @Composable
 fun LoginScreen(
-    onNavigateToHome: () -> Unit = {},
+    onNavigateToHome: (String) -> Unit = {},
     viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.ui.collectAsState()
@@ -137,7 +137,7 @@ fun LoginScreen(
             
             LaunchedEffect(uiState.loggedIn) {
                 if (uiState.loggedIn) {
-                    onNavigateToHome()
+                    onNavigateToHome(uiState.userEmail)
                 }
             }
         }

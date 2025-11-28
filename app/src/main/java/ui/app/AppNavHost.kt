@@ -35,8 +35,8 @@ fun AppNavHost(
         
         composable(Route.LOGIN) {
             LoginScreen(
-                onNavigateToHome = { 
-                    navController.navigate(Route.PRINCIPAL) {
+                onNavigateToHome = { userEmail ->
+                    navController.navigate("${Route.PRINCIPAL}/$userEmail") {
                         popUpTo(Route.HOME) { inclusive = true }
                     }
                 }
@@ -55,11 +55,11 @@ fun AppNavHost(
             )
         }
         
-        composable(Route.PRINCIPAL) {
-            val currentUser = FirebaseAuth.getInstance().currentUser
+        composable("${Route.PRINCIPAL}/{userEmail}") { backStackEntry ->
+            val userEmail = backStackEntry.arguments?.getString("userEmail") ?: ""
             PrincipalScreen(
-                userName = currentUser?.displayName ?: currentUser?.email?.substringBefore("@") ?: "Usuario",
-                userEmail = currentUser?.email ?: "",
+                userName = userEmail.substringBefore("@"),
+                userEmail = userEmail,
                 onLogout = {
                     navController.navigate(Route.HOME) {
                         popUpTo(0) { inclusive = true }
@@ -72,7 +72,7 @@ fun AppNavHost(
                     navController.navigate(Route.BLOG)
                 },
                 onNavigateToProfile = {
-                    navController.navigate(Route.PROFILE)
+                    navController.navigate("${Route.PROFILE}/$userEmail")
                 },
                 onNavigateToSettings = {
                     navController.navigate(Route.SETTINGS)
@@ -83,8 +83,11 @@ fun AppNavHost(
             )
         }
         
-        composable(Route.PROFILE) {
+        composable("${Route.PROFILE}/{userEmail}") { backStackEntry ->
+            val userEmail = backStackEntry.arguments?.getString("userEmail") ?: ""
             ProfileScreen(
+                userName = userEmail.substringBefore("@"),
+                userEmail = userEmail,
                 onLogout = {
                     navController.navigate(Route.HOME) {
                         popUpTo(0) { inclusive = true }

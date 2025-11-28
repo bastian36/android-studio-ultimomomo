@@ -18,7 +18,9 @@ data class LoginUiState(
     val password: String = "",
     val loading: Boolean = false,
     val error: String? = null,
-    val loggedIn: Boolean = false
+    val loggedIn: Boolean = false,
+    val userId: Int? = null,
+    val userEmail: String = ""
 )
 
 class LoginViewModel : ViewModel() {
@@ -65,10 +67,47 @@ class LoginViewModel : ViewModel() {
                 
                 withContext(Dispatchers.Main) {
                     if (responseCode == 200 || responseCode == 201) {
-                        _ui.update { it.copy(loading = false, loggedIn = true) }
+                        val response = connection.inputStream.bufferedReader().readText()
+                        val json = JSONObject(response)
+                        val data = json.getJSONObject("data")
+                        val usuario = data.getJSONObject("usuario")
+                        val userId = usuario.getInt("id_usuario")
+                        
+                        fetchUserDetails(userId)
                     } else {
                         val error = connection.errorStream?.bufferedReader()?.readText() ?: "Error $responseCode"
                         _ui.update { it.copy(loading = false, error = error) }
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    _ui.update { it.copy(loading = false, error = e.message ?: "Error de conexión") }
+                }
+            }
+        }
+    }
+    
+    private fun fetchUserDetails(userId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val url = URL("http://10.0.2.2:3000/api/auth/usuarios/$userId")
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.connectTimeout = 10000
+                connection.readTimeout = 10000
+                
+                val responseCode = connection.responseCode
+                
+                withContext(Dispatchers.Main) {
+                    if (responseCode == 200) {
+                        val response = connection.inputStream.bufferedReader().readText()
+                        val json = JSONObject(response)
+                        val data = json.getJSONObject("data")
+                        val correo = data.getString("correo")
+                        
+                        _ui.update { it.copy(loading = false, loggedIn = true, userId = userId, userEmail = correo) }
+                    } else {
+                        _ui.update { it.copy(loading = false, error = "Error al obtener datos del usuario") }
                     }
                 }
             } catch (e: Exception) {
