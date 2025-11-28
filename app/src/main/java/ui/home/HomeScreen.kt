@@ -40,7 +40,7 @@ fun HomeScreen(
     ) {
         // Imagen animada
         Image(
-            painter = painterResource(R.drawable.logo_inicio),
+            painter = painterResource(R.drawable.leveluplogo),
             contentDescription = "Logo de la aplicación",
             modifier = Modifier
                 .size(200.dp)

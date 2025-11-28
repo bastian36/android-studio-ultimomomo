@@ -3,11 +3,15 @@ package ui.login
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
+import org.json.JSONObject
 
 data class LoginUiState(
     val email: String = "",
@@ -20,7 +24,6 @@ data class LoginUiState(
 class LoginViewModel : ViewModel() {
     private val _ui = MutableStateFlow(LoginUiState())
     val ui: StateFlow<LoginUiState> = _ui
-    private val auth = FirebaseAuth.getInstance()
 
     fun onEmailChange(v: String) = _ui.update { it.copy(email = v, error = null) }
     fun onPasswordChange(v: String) = _ui.update { it.copy(password = v, error = null) }
@@ -41,18 +44,38 @@ class LoginViewModel : ViewModel() {
         
         _ui.update { it.copy(loading = true, error = null) }
         
-        auth.signInWithEmailAndPassword(_ui.value.email, _ui.value.password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    _ui.update { it.copy(loading = false, loggedIn = true) }
-                } else {
-                    _ui.update { 
-                        it.copy(
-                            loading = false, 
-                            error = task.exception?.message ?: "Error de autenticación"
-                        ) 
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val url = URL("http://10.0.2.2:3000/api/auth/login")
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "POST"
+                connection.setRequestProperty("Content-Type", "application/json")
+                connection.doOutput = true
+                connection.connectTimeout = 10000
+                connection.readTimeout = 10000
+                
+                val jsonBody = JSONObject().apply {
+                    put("correo", _ui.value.email)
+                    put("password", _ui.value.password)
+                }
+                
+                connection.outputStream.use { it.write(jsonBody.toString().toByteArray()) }
+                
+                val responseCode = connection.responseCode
+                
+                withContext(Dispatchers.Main) {
+                    if (responseCode == 200 || responseCode == 201) {
+                        _ui.update { it.copy(loading = false, loggedIn = true) }
+                    } else {
+                        val error = connection.errorStream?.bufferedReader()?.readText() ?: "Error $responseCode"
+                        _ui.update { it.copy(loading = false, error = error) }
                     }
                 }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    _ui.update { it.copy(loading = false, error = e.message ?: "Error de conexión") }
+                }
             }
+        }
     }
 }

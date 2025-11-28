@@ -1,5 +1,6 @@
 package ui.blog
 
+import android.util.Base64
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,16 +14,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import model.BlogData
 import model.News
 import cl.duoc.example.myapplication.R
+import android.graphics.BitmapFactory
 
 @Composable
-fun BlogScreen() {
+fun BlogScreen(viewModel: BlogViewModel = viewModel()) {
+    val apiBlogs by viewModel.apiBlogs.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    
     val news = remember {
         listOf(
             News(1, "Expansión de Catan: Navegantes Espaciales", "La clásica isla de Catan se aventura al espacio exterior con nuevas reglas y recursos cósmicos. ¡Prepárate para colonizar galaxias!", "15 de julio de 2024", "catan"),
@@ -67,6 +75,16 @@ fun BlogScreen() {
                 items(news) { article ->
                     NewsCard(news = article)
                 }
+                
+                items(apiBlogs) { blog ->
+                    ApiBlogCard(blog = blog)
+                }
+            }
+            
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
             }
         }
     }

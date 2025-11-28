@@ -9,7 +9,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import android.widget.Toast
-import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
+import org.json.JSONObject
 
 @Composable
 fun RegistrarseScreen(
@@ -20,7 +25,7 @@ fun RegistrarseScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val auth = FirebaseAuth.getInstance()
+    val scope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -69,16 +74,42 @@ fun RegistrarseScreen(
             onClick = {
                 if (email.isNotBlank() && password.length >= 6 && password == confirmPassword) {
                     isLoading = true
-                    auth.createUserWithEmailAndPassword(email, password)
-                        .addOnCompleteListener { task ->
-                            isLoading = false
-                            if (task.isSuccessful) {
-                                Toast.makeText(context, "Usuario creado exitosamente", Toast.LENGTH_LONG).show()
-                                onNavigateToLogin()
-                            } else {
-                                Toast.makeText(context, "Error: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    scope.launch(Dispatchers.IO) {
+                        try {
+                            val url = URL("http://10.0.2.2:3000/api/auth/registro")
+                            val connection = url.openConnection() as HttpURLConnection
+                            connection.requestMethod = "POST"
+                            connection.setRequestProperty("Content-Type", "application/json")
+                            connection.doOutput = true
+                            connection.connectTimeout = 10000
+                            connection.readTimeout = 10000
+                            
+                            val jsonBody = JSONObject().apply {
+                                put("correo", email)
+                                put("password", password)
+                            }
+                            
+                            connection.outputStream.use { it.write(jsonBody.toString().toByteArray()) }
+                            
+                            val responseCode = connection.responseCode
+                            
+                            withContext(Dispatchers.Main) {
+                                isLoading = false
+                                if (responseCode == 200 || responseCode == 201) {
+                                    Toast.makeText(context, "Usuario registrado exitosamente", Toast.LENGTH_LONG).show()
+                                    onNavigateToLogin()
+                                } else {
+                                    val error = connection.errorStream?.bufferedReader()?.readText() ?: "Error $responseCode"
+                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        } catch (e: Exception) {
+                            withContext(Dispatchers.Main) {
+                                isLoading = false
+                                Toast.makeText(context, "Error: ${e.message ?: e.toString()}", Toast.LENGTH_LONG).show()
                             }
                         }
+                    }
                 } else {
                     Toast.makeText(context, "Verifica los datos ingresados", Toast.LENGTH_SHORT).show()
                 }

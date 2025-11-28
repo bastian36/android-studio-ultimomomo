@@ -18,13 +18,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import model.Product
+import model.ApiProduct
 import cl.duoc.example.myapplication.R
 import java.util.Locale
 
 @Composable
-fun ProductsScreen() {
-    val products = remember {
+fun ProductsScreen(viewModel: ProductsViewModel = viewModel()) {
+    val staticProducts = remember {
         listOf(
             Product(1, "PlayStation 5", "Consola de videojuegos de última generación", 699990.0, "playstation5", "Consolas"),
             Product(2, "Audífono HyperX", "Audífonos gaming de alta calidad", 69990.0, "audifono_hyper_x", "Audio"),
@@ -38,6 +40,9 @@ fun ProductsScreen() {
             Product(10, "Control Xbox", "Control inalámbrico Xbox", 59990.0, "control_xbox", "Periféricos")
         )
     }
+    
+    val apiProducts by viewModel.apiProducts.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     Box(
         modifier = Modifier
@@ -73,8 +78,23 @@ fun ProductsScreen() {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(products) { product ->
+                items(staticProducts) { product ->
                     ProductCard(product = product)
+                }
+                
+                if (isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                }
+                
+                items(apiProducts) { apiProduct ->
+                    ApiProductCard(product = apiProduct)
                 }
             }
         }
